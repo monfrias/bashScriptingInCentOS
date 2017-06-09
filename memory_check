@@ -1,0 +1,51 @@
+#!/bin/bash
+
+#Author: Mon Cedrick G. Frias
+#Date: June , 2017
+#Filename: memory_check
+
+format () {
+    echo "Format: $0 [ -c <critical_threshold> ] [ -w <warning_threshold> ] [ -e <your_email> ]"
+    exit 1  #General error, the program is now terminated
+}
+
+if [ $# -ne 6 ]; then   #ensures if there are 3 parameters. Else, exit
+    format
+fi
+
+#free
+TOTAL_MEMORY=$( free | grep Mem: | awk '{ print $2 }' )
+#echo $TOTAL_MEMORY  #Maximum memory capacity of the computer
+USED_MEMORY=$( free | grep Mem: | awk '{ print $3 }' )
+#echo $USED_MEMORY   #Total memory occupied
+FREE_MEMORY=$( free | grep Mem: | awk '{ print $4 }' )
+#echo $FREE_MEMORY   #Remaining memory available
+PERCENTAGE=$( echo "scale=2; ($USED_MEMORY/$TOTAL_MEMORY)*100" | bc )
+#echo $PERCENTAGE    #Memory threshold
+
+while getopts ":c:w:e:" args; do    # Getting the parameters
+    case "${args}" in
+        c) c=${OPTARG};;
+        w) w=${OPTARG};;
+        e) e=${OPTARG};;
+        *) format;;
+    esac
+done
+
+if [ "$w" -ge "$c" ]; then  #If warning threshold is greater than critical threshold, prompt format
+    format
+elif [ "${PERCENTAGE%.*}" -ge "$c" ]; then  #If used memory rea
+    #echo "Memory used reaches critical threshold!"
+    exit 2
+elif [ "${PERCENTAGE%.*}" -ge "$w" ]; then
+    #echo "Memory used reaches warning threshold!"
+    exit 1
+else
+    #echo "Memory used is below warning threshold."
+    exit 0
+fi
+
+
+#Exit code 0        Success
+#Exit code 1        General errors, Miscellaneous errors, such as "divide by zero" and other impermissible operations
+#Exit code 2        Misuse of shell builtins (according to Bash documentation)        Example: empty_function() {}
