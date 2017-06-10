@@ -1,12 +1,25 @@
 #!/bin/bash
 
 #Author: Mon Cedrick G. Frias
-#Date: June , 2017
+#Date: June 9, 2017
 #Filename: memory_check
 
 format () {
     echo "Format: $0 [ -c <critical_threshold> ] [ -w <warning_threshold> ] [ -e <your_email> ]"
     exit 1  #General error, the program is now terminated
+}
+
+reportFile () {
+    EMAILFROM=friasmoncedrick@gmail.com
+    EMAILTO=friasmoncedrick@gmail.com
+    EMAILSERVER=smtp.gmail.com:587
+    EMAILUSER=friasmoncedrick@gmail.com
+    EMAILPASS=cedrick0510
+    EMAILSUBJECT="$( date +"%Y%m%d %H:%M memory check critical" )"
+
+    ps -eo pmem,pid,user | sort -k 1 -nr | head -10 > /tmp/report.txt    #Gets only the top 10 processes with bigger memory consumption
+    sendEmail -f $EMAILFROM -t $EMAILTO -u $EMAILSUBJECT -o message-file=/tmp/report.txt -s $EMAILSERVER -xu $EMAILUSER -xp $EMAILPASS
+    rm /tmp/report.txt
 }
 
 if [ $# -ne 6 ]; then   #ensures if there are 3 parameters. Else, exit
@@ -34,14 +47,15 @@ done
 
 if [ "$w" -ge "$c" ]; then  #If warning threshold is greater than critical threshold, prompt format
     format
-elif [ "${PERCENTAGE%.*}" -ge "$c" ]; then  #If used memory rea
-    #echo "Memory used reaches critical threshold!"
+elif [ "${PERCENTAGE%.*}" -ge "$c" ]; then
+    echo "Memory used reaches critical threshold!"
+    reportFile
     exit 2
 elif [ "${PERCENTAGE%.*}" -ge "$w" ]; then
-    #echo "Memory used reaches warning threshold!"
+    echo "Memory used reaches warning threshold!"
     exit 1
-else
-    #echo "Memory used is below warning threshold."
+else    
+    echo "Memory used is below warning threshold."
     exit 0
 fi
 
